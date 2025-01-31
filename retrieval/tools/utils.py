@@ -148,14 +148,22 @@ def init_distributed_mode(args):
 
 
 def log_results(results, dataset, main_logger, test=False):
-    if test:
-        pre = "test"
-    else:
-        pre = "val"
     main_logger.info('{}: Caption to audio: r1: {:.2f}, r5: {:.2f}, '
                      'r10: {:.2f}, r50: {:.2f}, medr: {:.2f}, meanr: {:.2f}, mAP10: {:.3f}'.format(dataset, *results["t2a"]))
     main_logger.info('{}: Audio to caption: r1: {:.2f}, r5: {:.2f}, '
                      'r10: {:.2f}, r50: {:.2f}, medr: {:.2f}, meanr: {:.2f}, mAP10: {:.3f}'.format(dataset, *results["a2t"]))
+    
+def log_results_wandb(results, dataset, main_logger, test=False):
+    if test:
+        pre = "test"
+    else:
+        pre = "val"
+
+    main_logger.info('{}: Caption to audio: r1: {:.2f}, r5: {:.2f}, '
+                     'r10: {:.2f}, r50: {:.2f}, medr: {:.2f}, meanr: {:.2f}, mAP10: {:.3f}'.format(dataset, *results["t2a"]))
+    main_logger.info('{}: Audio to caption: r1: {:.2f}, r5: {:.2f}, '
+                     'r10: {:.2f}, r50: {:.2f}, medr: {:.2f}, meanr: {:.2f}, mAP10: {:.3f}'.format(dataset, *results["a2t"]))
+    
     wandb.log({
         f"{dataset}:{pre}_t2a/r1": results["t2a"][0],
         f"{dataset}:{pre}_t2a/r5": results["t2a"][1],

@@ -34,85 +34,6 @@ from tools.utils import (
 
 WB_LOG = False
 
-def train(model, dataloader, optimizer, scheduler, device, epoch):
-    model.train()
-     
-    if is_dist_avail_and_initialized():
-        if model.module.audio_encoder.config["audio_encoder_args"]["type"] == "dac":
-                # Set the codec part to evaluation mode
-                model.module.audio_encoder.eval()
-        # print(f"model.module.audio_encoder in eval mode: {not model.module.audio_encoder.training}")
-        elif model.module.audio_encoder.config["audio_encoder_args"]["type"] == "dac_embedder":
-                # Set the codec part to evaluation mode
-                model.module.audio_encoder.codes_enc.eval()
-        elif model.module.audio_encoder.config["audio_encoder_args"]["type"] == "dac_htsat":
-                # Set the codec part to evaluation mode
-                # model.module.audio_encoder.codes_enc.to(device)
-                model.module.audio_encoder.codes_enc.eval()
-        elif model.module.audio_encoder.config["audio_encoder_args"]["type"] == "vamp":
-                # Set the codec part to evaluation mode
-                # model.module.audio_encoder.codes_enc.to(device)
-                model.module.audio_encoder.codes_enc.eval()
-        elif model.module.audio_encoder.config["audio_encoder_args"]["type"] == "encodec":
-                # Set the codec part to evaluation mode
-                # model.module.audio_encoder.codes_enc.to(device)
-                model.module.audio_encoder.eval()
-    else:
-        if model.audio_encoder.config["audio_encoder_args"]["type"] == "dac":
-                # Set the codec part to evaluation mode
-                model.audio_encoder.eval()
-        # print(f"model.audio_encoder in eval mode: {not model.audio_encoder.training}")
-        elif model.audio_encoder.config["audio_encoder_args"]["type"] == "dac_embedder":
-                # Set the codec part to evaluation mode
-                model.audio_encoder.codes_enc.eval()
-        elif model.audio_encoder.config["audio_encoder_args"]["type"] == "dac_htsat":
-                # Set the codec part to evaluation mode
-                # model.audio_encoder.codes_enc.to(device)
-                model.audio_encoder.codes_enc.eval()
-        elif model.audio_encoder.config["audio_encoder_args"]["type"] == "vamp":
-                # Set the codec part to evaluation mode
-                # model.audio_encoder.codes_enc.to(device)
-                model.audio_encoder.codes_enc.eval()
-        elif model.audio_encoder.config["audio_encoder_args"]["type"] == "encodec":
-                # Set the codec part to evaluation mode
-                # model.audio_encoder.codes_enc.to(device)
-                model.audio_encoder.eval()
-
-    epoch_loss = AverageMeter()
-    start_time = time.time()
-
-    if is_dist_avail_and_initialized():
-        dataloader.sampler.set_epoch(epoch)
-
-    for batch_id, (audio, text, idx) in tqdm(enumerate(dataloader), total=len(dataloader)):
-
-        optimizer.zero_grad()
-
-        step = len(dataloader) * (epoch - 1) + batch_id
-        scheduler(step)
-        if is_main_process() and WB_LOG:
-            wandb.log({"lr": optimizer.param_groups[0]["lr"]}, step=step)
-
-        audio = audio.to(device, non_blocking=True)
-        idx = idx.to(device, non_blocking=True)
-
-        loss = model(audio, text, idx)
-
-        loss.backward()
-        optimizer.step()
-
-        epoch_loss.update(loss.cpu().item())
-
-    elapsed_time = time.time() - start_time
-
-    if is_main_process() and WB_LOG:
-        wandb.log({"loss": epoch_loss.avg,
-               "epoch": epoch})
-
-    return {
-        "loss": epoch_loss.avg,
-        "time": elapsed_time
-    }
 
 
 def main():
@@ -220,43 +141,6 @@ def main():
     if is_main_process() and WB_LOG:
         wandb.watch(model)
 
-    clotho_val_loader = clotho_datamodule.val_dataloader()
-
-    loss_stats = []
-    ac_recall_stats = []
-    clotho_recall_stats = []
-    for epoch in range(start_epoch, max_epoch + 1):
-        main_logger.info(f'Training for epoch [{epoch}]')
-
-        train_statics = train(model, dataloader, optimizer, scheduler, device, epoch)
-        loss = train_statics["loss"]
-        elapsed_time = train_statics["time"]
-        loss_stats.append(loss)
-
-        main_logger.info(f'Training statistics:\tloss for epoch [{epoch}]: {loss:.3f},'
-                         f'\ttime: {elapsed_time:.1f}, lr: {optimizer.param_groups[0]["lr"]:.6f}.')
-
-        if is_dist_avail_and_initialized():
-            dist.barrier()
-            torch.cuda.empty_cache()
-
-        if is_main_process():
-            clotho_metrics = validate(model_without_ddp, clotho_val_loader, device) # model_without_ddp
-            if is_main_process():
-                if WB_LOG:
-                    log_results_wandb(clotho_metrics, 'Clotho', main_logger, test=False)
-                else:
-                    log_results(clotho_metrics, 'Clotho', main_logger, test=False)
-            clotho_recall_stats.append(clotho_metrics["t2a"][0] + clotho_metrics["a2t"][0])
-            if clotho_recall_stats[-1] >= max(clotho_recall_stats) and is_main_process():
-                sav_obj = {
-                    "model": model_without_ddp.state_dict(),
-                    "optimizer": optimizer.state_dict(),
-                    "config": config,
-                    "epoch": epoch
-                }
-                torch.save(sav_obj, str(model_output_dir) + "/clotho_best_model.pt")
-
     if is_main_process():
         main_logger.info('Evaluation start...')
         clotho_test_loader = clotho_datamodule.test_dataloader()
@@ -269,7 +153,6 @@ def main():
         else:
             log_results(clotho_metrics, 'Clotho', main_logger, test=True)
         main_logger.info("Done.")
-        # wandb.finish()
 
 
 @torch.no_grad()

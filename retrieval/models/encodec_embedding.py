@@ -12,7 +12,8 @@ from transformers.models.encodec.modeling_encodec import (
     EncodecResidualVectorQuantizer,
 )
 
-NDFloat = npt.NDArray[np.float_]
+# NDFloat = npt.NDArray[np.float_]
+NDFloat = npt.NDArray[np.float64]
 ProcessedInput = TypedDict(
     "ProcessedInput", {"input_values": torch.Tensor, "padding_mask": torch.Tensor}
 )

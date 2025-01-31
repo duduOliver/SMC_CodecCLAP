@@ -41,8 +41,11 @@ audio_encoder_args:
 
 
 data_args:
+  # batch_size: 5
   batch_size: 32
-  num_workers: 56
+  # batch_size: 256
+  # batch_size: 209
+  num_workers: 32
 
 
 text_encoder_args:

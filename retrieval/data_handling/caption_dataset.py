@@ -21,7 +21,7 @@ class AudioCaptionDataset(Dataset):
         self.sr = audio_config["sr"]
 
         # json_path = f"data/{dataset}/json_files/{split}.json"
-        json_path = f"WavCaps/retrieval/data/{dataset}/json_files/{split}.json"
+        json_path = f"SMC_CodecCLAP/retrieval/data/{dataset}/json_files/{split}.json"
 
         if audio_config["max_length"] != 0:
             self.max_length = audio_config["max_length"] * self.sr

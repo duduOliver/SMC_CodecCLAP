@@ -76,6 +76,29 @@ class AudioCaptionDataModule:
             collate_fn=collate_fn,
             drop_last=True
         )
+        
+    # def val_dataloader(self,
+    #                      is_distributed=False,
+    #                      num_tasks=1,
+    #                      global_rank=0):
+    #     sampler = self._get_sampler(
+    #         dataset=self.val_set,
+    #         shuffle=False,
+    #         is_distributed=is_distributed,
+    #         num_tasks=num_tasks,
+    #         global_rank=global_rank)
+    #     shuffle = sampler is None
+
+    #     return DataLoader(
+    #         dataset=self.val_set,
+    #         batch_size=self.batch_size,
+    #         num_workers=self.num_workers,
+    #         pin_memory=True,
+    #         sampler=sampler,
+    #         shuffle=False,
+    #         collate_fn=collate_fn,
+    #         drop_last=False
+    #     )
 
     def val_dataloader(self):
         return DataLoader(self.val_set,
@@ -88,6 +111,29 @@ class AudioCaptionDataModule:
                           drop_last=False
                           )
 
+    # def test_dataloader(self,
+    #                      is_distributed=False,
+    #                      num_tasks=1,
+    #                      global_rank=0):
+    #     sampler = self._get_sampler(
+    #         dataset=self.test_set,
+    #         shuffle=False,
+    #         is_distributed=is_distributed,
+    #         num_tasks=num_tasks,
+    #         global_rank=global_rank)
+    #     shuffle = sampler is None
+
+    #     return DataLoader(
+    #         dataset=self.test_set,
+    #         batch_size=self.batch_size,
+    #         num_workers=self.num_workers,
+    #         pin_memory=True,
+    #         sampler=sampler,
+    #         shuffle=False,
+    #         collate_fn=collate_fn,
+    #         drop_last=False
+    #     )
+        
     def test_dataloader(self):
         return DataLoader(self.test_set,
                           batch_size=self.batch_size,
