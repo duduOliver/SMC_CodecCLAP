@@ -74,7 +74,8 @@ class AudioEncoder(nn.Module):
             
         ### Add the implementation of ENCODECMAE  ###
         elif config["audio_encoder_args"]["type"] == "mae":
-            self.audio_enc = load_model('ec-ec-base_st', mode='train', device=config["device"])
+            # self.audio_enc = load_model('ec-ec-base_st', mode='train', device=config["device"])
+            self.audio_enc = load_model('ec-ec-large', mode='train', device=config["device"])
             self.audio_enc.visible_encoder.compile=False
             # features = model.extract_features_from_array(wavs, layer=-1)
             self.audio_width = config["audio_encoder_args"]["audio_width"]  
@@ -240,7 +241,14 @@ class AudioEncoder(nn.Module):
         elif self.config["audio_encoder_args"]["type"] == "mae":
             # if self.config["device"] == "cuda":
             audio_encoded = self.audio_enc.extract_features_from_array(inputs, return_type='torch', layer=-1)
-            return torch.flatten(audio_encoded, start_dim=1)
+            # 使用全局平均池化
+            if self.config["audio_encoder_args"]["dim_reduced"]:
+                global_avg_pool = nn.AdaptiveAvgPool1d(768)
+                audio_encoded_flat = torch.flatten(audio_encoded, start_dim=1)
+                audio_encoded_reduced = global_avg_pool(audio_encoded_flat.unsqueeze(1)).squeeze(1)
+                return audio_encoded_reduced
+            else:
+                return torch.flatten(audio_encoded, start_dim=1)
         elif self.config["audio_encoder_args"]["type"] == "mel":
             audio_encoded = self.audio_enc(inputs)
             return torch.flatten(audio_encoded, start_dim=1)

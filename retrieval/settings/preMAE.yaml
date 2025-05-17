@@ -1,14 +1,17 @@
 device: "cuda"
-# device: "cpu"
 seed: 20
 embed_size: 1024
 temp: 0.07
 # queue_size: 5120
-json_files: ["retrieval/data/Clotho/json_files/train.json"]
+json_files: ['SMC_CodecCLAP/data/json_files/BBC_Sound_Effects/bbc_final.json', 'SMC_CodecCLAP/data/json_files/FreeSound/fsd_final.json', 'SMC_CodecCLAP/data/json_files/SoundBible/sb_final.json', "SMC_CodecCLAP/data/json_files/AudioSet_SL/as_final.json"]
 # json_files: ["retrieval/data/Clotho/json_files/test.json"]
 resume: false
-blacklist: "data/json_files/blacklist/" # path to blacklist file
+# blacklist: "SMC_CodecCLAP/data/json_files/blacklist/blacklist_exclude_all_ac.json" # zero shot 
+blacklist: "SMC_CodecCLAP/data/json_files/blacklist/blacklist_exclude_test_ac.json" # exclude ac test
+# blacklist: null
 embed_regularization: true
+data_dir: "/SMC_CodecCLAP/datasets/WavCaps/waveforms"
+bucket: False
 
 dist_args:
   world_size: 1 # fake value
@@ -36,7 +39,7 @@ audio_encoder_args:
   spec_augment: False
   # audio_width: 576000 # (75*10)*768 = 576000 ec-ec-base
   audio_width: 768000 # ec-ec-large
-  N_CODEBOOKS: None # for dac usage only; dims are 500 for 10s long; 
+  # audio_width: 768 # ec-ec-large pooling
   dim_reduced: False
 
 
